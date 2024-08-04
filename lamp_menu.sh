@@ -37,6 +37,24 @@ function install_php {
     sudo apt install php8.1 php8.1-mysql libapache2-mod-php8.1 -y
 }
 
+function install_phpmyadmin {
+    echo "Menginstal phpMyAdmin..."
+    sudo apt install phpmyadmin -y
+
+    echo "Mengonfigurasi phpMyAdmin..."
+    sudo ln -s /usr/share/phpmyadmin /var/www/html/phpmyadmin
+    sudo systemctl restart apache2
+
+    echo "Mengamankan phpMyAdmin..."
+    sudo bash -c "echo 'AuthType Basic' >> /usr/share/phpmyadmin/.htaccess"
+    sudo bash -c "echo 'AuthName \"Restricted Files\"' >> /usr/share/phpmyadmin/.htaccess"
+    sudo bash -c "echo 'AuthUserFile /etc/phpmyadmin/.htpasswd' >> /usr/share/phpmyadmin/.htaccess"
+    sudo bash -c "echo 'Require valid-user' >> /usr/share/phpmyadmin/.htaccess"
+    sudo htpasswd -c /etc/phpmyadmin/.htpasswd admin
+
+    echo "phpMyAdmin berhasil diinstal dan dikonfigurasi!"
+}
+
 function restore_backup {
     echo "Memulihkan file website..."
     sudo rsync -av --delete "$BACKUP_DIR/web_files/" "$WEB_ROOT/"
@@ -99,19 +117,21 @@ while true; do
     echo "2. Instal Apache"
     echo "3. Instal MySQL"
     echo "4. Instal PHP (7.4 & 8.1)"
-    echo "5. Pulihkan Cadangan"
-    echo "6. Instal Domain"
-    echo "7. Keluar"
-    read -p "Pilih opsi [1-7]: " choice
+    echo "5. Instal phpMyAdmin"
+    echo "6. Pulihkan Cadangan"
+    echo "7. Instal Domain"
+    echo "8. Keluar"
+    read -p "Pilih opsi [1-8]: " choice
 
     case $choice in
         1) update_system ;;
         2) install_apache ;;
         3) install_mysql ;;
         4) install_php ;;
-        5) restore_backup ;;
-        6) install_domain ;;
-        7) echo "Keluar..."; exit 0 ;;
+        5) install_phpmyadmin ;;
+        6) restore_backup ;;
+        7) install_domain ;;
+        8) echo "Keluar..."; exit 0 ;;
         *) echo "Opsi tidak valid!";;
     esac
 done
