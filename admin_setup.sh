@@ -211,7 +211,54 @@ function replace_domain {
     echo "Domain telah diperbarui menjadi $DOMAIN!"
 }
 
-# Pastikan dialog terinstal
+function create_or_replace_db {
+    local action=$(dialog --clear --title "Database Management" --menu "Pilih opsi:" 15 50 4 \
+        1 "Buat Database Baru" \
+        2 "Ganti Database, Username, dan Password" \
+        3 "Kembali" \
+        2>&1 >/dev/tty)
+
+    case $action in
+        1)
+            read -p "Masukkan nama database baru: " NEW_DB_NAME
+            mysql -u $DB_USER -p$DB_PASS -e "CREATE DATABASE $NEW_DB_NAME;"
+            echo "Database $NEW_DB_NAME telah dibuat."
+            ;;
+        2)
+            read -p "Masukkan nama database baru: " NEW_DB_NAME
+            read -p "Masukkan nama pengguna baru: " NEW_DB_USER
+            read -p "Masukkan password pengguna baru: " NEW_DB_PASS
+
+            echo "Mengganti database dan pengguna lama dengan baru..."
+
+            # Buat database baru
+            mysql -u $DB_USER -p$DB_PASS -e "CREATE DATABASE $NEW_DB_NAME;"
+            # Buat pengguna baru dan berikan hak akses
+            mysql -u $DB_USER -p$DB_PASS -e "CREATE USER '$NEW_DB_USER'@'localhost' IDENTIFIED BY '$NEW_DB_PASS';"
+            mysql -u $DB_USER -p$DB_PASS -e "GRANT ALL PRIVILEGES ON $NEW_DB_NAME.* TO '$NEW_DB_USER'@'localhost';"
+            mysql -u $DB_USER -p$DB_PASS -e "FLUSH PRIVILEGES;"
+
+            # Hapus database dan pengguna lama
+            mysql -u $DB_USER -p$DB_PASS -e "DROP DATABASE $DB_NAME;"
+            mysql -u $DB_USER -p$DB_PASS -e "DROP USER '$DB_USER'@'localhost';"
+
+            # Update variabel global
+            DB_NAME=$NEW_DB_NAME
+            DB_USER=$NEW_DB_USER
+            DB_PASS=$NEW_DB_PASS
+
+            echo "Database, pengguna, dan password telah diperbarui."
+            ;;
+        3)
+            return
+            ;;
+        *)
+            echo "Opsi tidak valid!"
+            ;;
+    esac
+}
+
+# Install dialog jika belum terpasang
 install_dialog
 
 while true; do
@@ -224,9 +271,10 @@ while true; do
         6 "Backup Data" \
         7 "Pulihkan Cadangan" \
         8 "Instal Domain" \
-        9 "Atur HTTPS" \
+        9 "Setup HTTPS" \
         10 "Ganti Domain" \
-        11 "Keluar" \
+        11 "Ganti Database, Username, dan Password" \
+        12 "Keluar" \
         2>&1 >/dev/tty)
 
     case $CHOICE in
@@ -240,7 +288,8 @@ while true; do
         8) install_domain ;;
         9) setup_https ;;
         10) replace_domain ;;
-        11) echo "Keluar..."; exit 0 ;;
+        11) create_or_replace_db ;;
+        12) echo "Keluar..."; exit 0 ;;
         *) echo "Opsi tidak valid!";;
     esac
 done
