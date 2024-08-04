@@ -3,9 +3,27 @@
 # Definisikan variabel
 BACKUP_DIR="/var/backups"
 WEB_ROOT="/var/www/html"
-DB_NAME="nama_database_anda"
-DB_USER="user_database_anda"
-DB_PASS="password_database_anda"
+DB_NAME="your_db_name"
+DB_USER="your_db_user"
+DB_PASS="your_db_pass"
+
+# Fungsi untuk memeriksa dan menginstal dialog jika belum terpasang
+function install_dialog {
+    if ! command -v dialog &> /dev/null; then
+        echo "dialog belum terinstal. Menginstal dialog..."
+        sudo apt update
+        sudo apt install dialog -y
+    fi
+}
+
+# Fungsi untuk memeriksa dan menginstal Certbot jika belum terpasang
+function install_certbot {
+    if ! command -v certbot &> /dev/null; then
+        echo "Certbot belum terinstal. Menginstal Certbot..."
+        sudo apt update
+        sudo apt install certbot python3-certbot-apache -y
+    fi
+}
 
 function update_system {
     echo "Memperbarui sistem..."
@@ -55,42 +73,56 @@ function install_phpmyadmin {
     echo "phpMyAdmin berhasil diinstal dan dikonfigurasi!"
 }
 
+function backup_data {
+    echo "Membuat backup file website..."
+    sudo tar -czvf $BACKUP_DIR/web_files_backup.tar.gz $WEB_ROOT
+
+    echo "Membuat backup database..."
+    mysqldump -u $DB_USER -p$DB_PASS $DB_NAME > $BACKUP_DIR/database_backup.sql
+
+    echo "Backup selesai!"
+}
+
 function restore_backup {
-    echo "Pilih file backup untuk dipulihkan:"
-    select FILE in $BACKUP_DIR/*.tar.gz; do
-        if [[ -f $FILE ]]; then
-            BACKUP_FILE=$FILE
-            break
-        else
-            echo "File tidak valid. Silakan pilih lagi."
-        fi
-    done
+    FILES=($(ls $BACKUP_DIR))
+    FILES+=("Kembali")
 
-    # Ekstrak file .tar.gz ke direktori sementara
-    TEMP_DIR=$(mktemp -d)
-    echo "Mengekstrak $BACKUP_FILE ke $TEMP_DIR..."
-    tar -xzvf "$BACKUP_FILE" -C "$TEMP_DIR"
+    CHOICE=$(dialog --clear --title "Restore Backup" --menu "Pilih file backup untuk dipulihkan" 15 50 4 "${FILES[@]}" 2>&1 >/dev/tty)
 
-    # Tentukan jalur file web dan backup database setelah ekstraksi
-    WEB_FILES_DIR="$TEMP_DIR/web_files"
-    DB_BACKUP_FILE="$TEMP_DIR/database_backup.sql"
-
-    echo "Memulihkan file website dari $WEB_FILES_DIR..."
-    if [[ -d "$WEB_FILES_DIR" ]]; then
-        sudo rsync -av --delete "$WEB_FILES_DIR/" "$WEB_ROOT/"
-    else
-        echo "Direktori web_files tidak ditemukan di $TEMP_DIR."
+    if [ "$CHOICE" == "Kembali" ]; then
+        return
     fi
 
-    echo "Memulihkan database dari $DB_BACKUP_FILE..."
-    if [[ -f "$DB_BACKUP_FILE" ]]; then
-        mysql -u $DB_USER -p $DB_NAME < "$DB_BACKUP_FILE"
-    else
-        echo "File database_backup.sql tidak ditemukan di $TEMP_DIR."
-    fi
+    BACKUP_FILE="$BACKUP_DIR/$CHOICE"
+    EXT="${BACKUP_FILE##*.}"
 
-    # Hapus direktori sementara setelah pemulihan
-    rm -rf "$TEMP_DIR"
+    case $EXT in
+        tar.gz)
+            TEMP_DIR=$(mktemp -d)
+            tar -xzvf "$BACKUP_FILE" -C "$TEMP_DIR"
+
+            echo "Memulihkan file website..."
+            sudo rsync -av --delete "$TEMP_DIR/web_files/" "$WEB_ROOT/"
+
+            echo "Memulihkan database..."
+            if [[ -f "$TEMP_DIR/database_backup.sql" ]]; then
+                mysql -u $DB_USER -p$DB_PASS $DB_NAME < "$TEMP_DIR/database_backup.sql"
+            else
+                echo "File database_backup.sql tidak ditemukan dalam arsip."
+            fi
+
+            rm -rf "$TEMP_DIR"
+            ;;
+
+        sql)
+            echo "Memulihkan database..."
+            mysql -u $DB_USER -p$DB_PASS $DB_NAME < "$BACKUP_FILE"
+            ;;
+
+        *)
+            echo "Format file backup tidak dikenali."
+            ;;
+    esac
 
     echo "Pemulihan selesai!"
 }
@@ -139,29 +171,75 @@ function install_domain {
     echo "Instalasi domain selesai!"
 }
 
-while true; do
-    echo "============================="
-    echo "Menu Utama"
-    echo "============================="
-    echo "1. Perbarui Sistem"
-    echo "2. Instal Apache"
-    echo "3. Instal MySQL"
-    echo "4. Instal PHP (7.4 & 8.1)"
-    echo "5. Instal phpMyAdmin"
-    echo "6. Pulihkan Cadangan"
-    echo "7. Instal Domain"
-    echo "8. Keluar"
-    read -p "Pilih opsi [1-8]: " choice
+function setup_https {
+    install_certbot
 
-    case $choice in
+    read -p "Masukkan nama domain untuk HTTPS (contoh: example.com): " DOMAIN
+    sudo certbot --apache -d $DOMAIN
+
+    echo "HTTPS telah diatur untuk $DOMAIN!"
+}
+
+function replace_domain {
+    read -p "Masukkan nama domain baru: " DOMAIN
+    WEB_ROOT="/var/www/$DOMAIN"
+    CONFIG_FILE="/etc/apache2/sites-available/$DOMAIN.conf"
+
+    echo "Menghapus konfigurasi domain lama jika ada..."
+    sudo a2dissite *.conf
+    sudo rm -f /etc/apache2/sites-available/*.conf
+
+    echo "Membuat konfigurasi baru untuk domain $DOMAIN..."
+    echo "<VirtualHost *:80>
+        ServerAdmin admin@$DOMAIN
+        ServerName $DOMAIN
+        ServerAlias www.$DOMAIN
+        DocumentRoot $WEB_ROOT
+        ErrorLog \${APACHE_LOG_DIR}/error.log
+        CustomLog \${APACHE_LOG_DIR}/access.log combined
+    </VirtualHost>" | sudo tee $CONFIG_FILE
+
+    echo "Mengaktifkan virtual host baru..."
+    sudo a2ensite $DOMAIN.conf
+
+    echo "Menguji konfigurasi Apache..."
+    sudo apache2ctl configtest
+
+    echo "Memuat ulang Apache..."
+    sudo systemctl reload apache2
+
+    echo "Domain telah diperbarui menjadi $DOMAIN!"
+}
+
+# Pastikan dialog terinstal
+install_dialog
+
+while true; do
+    CHOICE=$(dialog --clear --title "Menu Utama" --menu "Pilih opsi:" 15 50 10 \
+        1 "Perbarui Sistem" \
+        2 "Instal Apache" \
+        3 "Instal MySQL" \
+        4 "Instal PHP (7.4 & 8.1)" \
+        5 "Instal phpMyAdmin" \
+        6 "Backup Data" \
+        7 "Pulihkan Cadangan" \
+        8 "Instal Domain" \
+        9 "Atur HTTPS" \
+        10 "Ganti Domain" \
+        11 "Keluar" 2>&1 >/dev/tty)
+
+    case $CHOICE in
         1) update_system ;;
         2) install_apache ;;
         3) install_mysql ;;
         4) install_php ;;
         5) install_phpmyadmin ;;
-        6) restore_backup ;;
-        7) install_domain ;;
-        8) echo "Keluar..."; exit 0 ;;
+        6) backup_data ;;
+        7) restore_backup ;;
+        8) install_domain ;;
+        9) setup_https ;;
+        10) replace_domain ;;
+        11) echo "Keluar..."; exit 0 ;;
         *) echo "Opsi tidak valid!";;
     esac
 done
