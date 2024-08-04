@@ -24,7 +24,7 @@ Clone Repositori:
 
 Clone repositori ini ke sistem Anda:
 
-bash
+```bash
 Salin kode
 git clone https://github.com/username/lamp-server-scripts.git
 cd lamp-server-scripts
@@ -32,14 +32,14 @@ Buat Skrip Dapat Dieksekusi:
 
 Buat skrip dapat dieksekusi dengan perintah berikut:
 
-bash
+```bash
 Salin kode
 chmod +x lamp_menu.sh
 Jalankan Skrip:
 
 Jalankan skrip dengan perintah berikut:
 
-bash
+```bash
 Salin kode
 ./lamp_menu.sh
 Ikuti Instruksi di Layar:
@@ -49,7 +49,7 @@ Pilih opsi yang diinginkan dari menu interaktif.
 Konfigurasi
 Ubah nilai variabel berikut dalam skrip lamp_menu.sh sesuai kebutuhan Anda:
 
-bash
+```bash
 Salin kode
 BACKUP_DIR="/path/to/your/backup"
 WEB_ROOT="/var/www/html"
@@ -74,7 +74,7 @@ Tambahkan dan Commit Berkas:
 
 Tambahkan berkas lamp_menu.sh dan README.md ke repositori:
 
-bash
+```bash
 Salin kode
 git add lamp_menu.sh README.md
 git commit -m "Menambahkan skrip instalasi LAMP dan README"
@@ -82,7 +82,7 @@ Push ke GitHub:
 
 Hubungkan repositori lokal Anda dengan repositori GitHub dan push perubahan:
 
-bash
+```bash
 Salin kode
 git remote add origin https://github.com/asepsupriatna90/lamp-server-scripts.git
 git branch -M main
