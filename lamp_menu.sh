@@ -56,11 +56,21 @@ function install_phpmyadmin {
 }
 
 function restore_backup {
-    echo "Memulihkan file website..."
-    sudo rsync -av --delete "$BACKUP_DIR/web_files/" "$WEB_ROOT/"
+    echo "Pilih file backup untuk dipulihkan:"
+    select FILE in $BACKUP_DIR/*; do
+        if [[ -f $FILE ]]; then
+            BACKUP_FILE=$FILE
+            break
+        else
+            echo "File tidak valid. Silakan pilih lagi."
+        fi
+    done
 
-    echo "Memulihkan database..."
-    mysql -u $DB_USER -p$DB_PASS $DB_NAME < "$BACKUP_DIR/database_backup.sql"
+    echo "Memulihkan file website dari $BACKUP_FILE..."
+    sudo rsync -av --delete "$BACKUP_FILE/web_files/" "$WEB_ROOT/"
+
+    echo "Memulihkan database dari $BACKUP_FILE..."
+    mysql -u $DB_USER -p$DB_PASS $DB_NAME < "$BACKUP_FILE/database_backup.sql"
 
     echo "Pemulihan selesai!"
 }
