@@ -27,7 +27,7 @@ Skrip ini menyediakan alat otomatis untuk mengelola server LAMP (Linux, Apache, 
 1. **Clone Repository:**
 
    ```bash
-   git clone https://github.com/username/lamp-server-scripts.git
+   git clone https://github.com/asepsupriatna90/lamp-server-scripts.git
    cd lamp-server-scripts
    ```
 
