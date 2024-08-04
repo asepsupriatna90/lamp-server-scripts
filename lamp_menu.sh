@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Definisikan variabel
-BACKUP_DIR="/path/to/your/backup"
+BACKUP_DIR="/var/backups"
 WEB_ROOT="/var/www/html"
 DB_NAME="nama_database_anda"
 DB_USER="user_database_anda"
