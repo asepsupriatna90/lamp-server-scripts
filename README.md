@@ -30,7 +30,7 @@ Skrip ini memungkinkan Anda untuk menginstal dan mengelola server LAMP (Linux, A
    Pertama, clone repositori ini ke server Anda:
 
    ```bash
-   git clone https://github.com/username/lamp-server-scripts.git
+   git clone https://github.com/asepsupriatna90/lamp-server-scripts.git
    cd lamp-server-scripts
 
 
