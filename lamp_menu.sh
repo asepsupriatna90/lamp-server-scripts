@@ -57,7 +57,7 @@ function install_phpmyadmin {
 
 function restore_backup {
     echo "Pilih file backup untuk dipulihkan:"
-    select FILE in $BACKUP_DIR/*; do
+    select FILE in $BACKUP_DIR/*.tar.gz; do
         if [[ -f $FILE ]]; then
             BACKUP_FILE=$FILE
             break
@@ -66,11 +66,31 @@ function restore_backup {
         fi
     done
 
-    echo "Memulihkan file website dari $BACKUP_FILE..."
-    sudo rsync -av --delete "$BACKUP_FILE/web_files/" "$WEB_ROOT/"
+    # Ekstrak file .tar.gz ke direktori sementara
+    TEMP_DIR=$(mktemp -d)
+    echo "Mengekstrak $BACKUP_FILE ke $TEMP_DIR..."
+    tar -xzvf "$BACKUP_FILE" -C "$TEMP_DIR"
 
-    echo "Memulihkan database dari $BACKUP_FILE..."
-    mysql -u $DB_USER -p$DB_PASS $DB_NAME < "$BACKUP_FILE/database_backup.sql"
+    # Tentukan jalur file web dan backup database setelah ekstraksi
+    WEB_FILES_DIR="$TEMP_DIR/web_files"
+    DB_BACKUP_FILE="$TEMP_DIR/database_backup.sql"
+
+    echo "Memulihkan file website dari $WEB_FILES_DIR..."
+    if [[ -d "$WEB_FILES_DIR" ]]; then
+        sudo rsync -av --delete "$WEB_FILES_DIR/" "$WEB_ROOT/"
+    else
+        echo "Direktori web_files tidak ditemukan di $TEMP_DIR."
+    fi
+
+    echo "Memulihkan database dari $DB_BACKUP_FILE..."
+    if [[ -f "$DB_BACKUP_FILE" ]]; then
+        mysql -u $DB_USER -p $DB_NAME < "$DB_BACKUP_FILE"
+    else
+        echo "File database_backup.sql tidak ditemukan di $TEMP_DIR."
+    fi
+
+    # Hapus direktori sementara setelah pemulihan
+    rm -rf "$TEMP_DIR"
 
     echo "Pemulihan selesai!"
 }
@@ -95,7 +115,7 @@ function install_domain {
     <body>
         <h1>Sukses! Virtual host $DOMAIN berfungsi!</h1>
     </body>
-    </html>" > $WEB_ROOT/index.html
+    </html>" | sudo tee $WEB_ROOT/index.html
 
     echo "Membuat file konfigurasi virtual host..."
     echo "<VirtualHost *:80>
