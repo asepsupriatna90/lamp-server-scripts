@@ -1,8 +1,3 @@
-Berikut adalah contoh `README.md` yang mencakup panduan instalasi dan penggunaan untuk skrip `lamp_menu.sh`.
-
-### README.md
-
-```markdown
 # LAMP Server Installation Script
 
 Skrip ini memungkinkan Anda untuk menginstal dan mengelola server LAMP (Linux, Apache, MySQL, PHP) dengan mudah, termasuk instalasi phpMyAdmin. Skrip ini juga menyediakan opsi untuk memulihkan cadangan dan menginstal domain baru.
@@ -35,9 +30,9 @@ Skrip ini memungkinkan Anda untuk menginstal dan mengelola server LAMP (Linux, A
    Pertama, clone repositori ini ke server Anda:
 
    ```bash
-   git clone https://github.com/asepsupriatna90/lamp-server-scripts.git
+   git clone https://github.com/username/lamp-server-scripts.git
    cd lamp-server-scripts
-   ```
+
 
 2. **Beri Izin Eksekusi pada Skrip**
 
