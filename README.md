@@ -1,75 +1,101 @@
-# LAMP Server Installation Script
+# Lamp Server Scripts
 
-Skrip ini memungkinkan Anda untuk menginstal dan mengelola server LAMP (Linux, Apache, MySQL, PHP) dengan mudah, termasuk instalasi phpMyAdmin. Skrip ini juga menyediakan opsi untuk memulihkan cadangan dan menginstal domain baru.
-
-## Daftar Isi
-
-- [Fitur](#fitur)
-- [Prasyarat](#prasyarat)
-- [Cara Instalasi](#cara-instalasi)
-- [Cara Penggunaan](#cara-penggunaan)
-- [Catatan](#catatan)
+Skrip ini menyediakan alat otomatis untuk mengelola server LAMP (Linux, Apache, MySQL, PHP). Dengan skrip ini, Anda dapat melakukan berbagai tugas administratif seperti menginstal perangkat lunak, membuat cadangan, memulihkan data, dan mengonfigurasi domain serta HTTPS.
 
 ## Fitur
 
-- Memperbarui sistem
-- Menginstal Apache, MySQL, dan PHP (versi 7.4 & 8.1)
-- Menginstal phpMyAdmin
-- Memulihkan cadangan file dan database
-- Menginstal domain baru
+- **Perbarui Sistem:** Memperbarui dan meng-upgrade sistem operasi.
+- **Instal Apache:** Menginstal dan mengonfigurasi Apache.
+- **Instal MySQL:** Menginstal dan mengamankan MySQL.
+- **Instal PHP:** Menginstal PHP 7.4 dan 8.1.
+- **Instal phpMyAdmin:** Menginstal dan mengamankan phpMyAdmin.
+- **Backup Data:** Membuat cadangan file website dan database.
+- **Pulihkan Cadangan:** Memulihkan file website dan database dari cadangan.
+- **Instal Domain:** Mengonfigurasi virtual host untuk domain baru.
+- **Setup HTTPS:** Mengonfigurasi HTTPS menggunakan Certbot.
+- **Ganti Domain:** Mengganti konfigurasi domain lama dengan yang baru.
+- **Ganti Database, Username, dan Password:** Mengganti database, pengguna, dan password.
 
 ## Prasyarat
 
-- Ubuntu 20.04 LTS atau versi yang lebih baru
-- Akses root atau sudo
+- VPS atau server berbasis Linux.
+- Hak akses root atau sudo.
+- Koneksi internet.
 
-## Cara Instalasi
+## Instalasi
 
-1. **Clone Repositori**
-
-   Pertama, clone repositori ini ke server Anda:
+1. **Clone Repository:**
 
    ```bash
-   git clone https://github.com/asepsupriatna90/lamp-server-scripts.git
+   git clone https://github.com/username/lamp-server-scripts.git
    cd lamp-server-scripts
-
-
-2. **Beri Izin Eksekusi pada Skrip**
-
-   Pastikan skrip `lamp_menu.sh` dapat dieksekusi:
-
-   ```bash
-   chmod +x lamp_menu.sh
    ```
 
-3. **Jalankan Skrip**
+2. **Instal Dialog:**
 
-   Untuk menjalankan skrip dan menggunakan menu interaktif:
+   Jika `dialog` belum terpasang, instal dengan:
 
    ```bash
-   ./lamp_menu.sh
+   sudo apt update
+   sudo apt install dialog -y
    ```
 
-## Cara Penggunaan
+3. **Beri Hak Eksekusi pada Skrip:**
 
-Setelah menjalankan skrip, Anda akan melihat menu utama dengan opsi berikut:
+   ```bash
+   sudo chmod +x admin_setup.sh
+   ```
 
-1. **Perbarui Sistem**: Memperbarui paket sistem.
-2. **Instal Apache**: Menginstal dan mengonfigurasi server web Apache.
-3. **Instal MySQL**: Menginstal dan mengonfigurasi server database MySQL.
-4. **Instal PHP (7.4 & 8.1)**: Menginstal PHP versi 7.4 dan 8.1 serta modul terkait.
-5. **Instal phpMyAdmin**: Menginstal phpMyAdmin dan mengonfigurasinya.
-6. **Pulihkan Cadangan**: Memulihkan file website dan database dari cadangan.
-7. **Instal Domain**: Mengonfigurasi virtual host untuk domain baru.
-8. **Keluar**: Keluar dari skrip.
+4. **Pindahkan Skrip ke Direktori Eksekusi:**
 
-Ikuti petunjuk di layar untuk memilih opsi yang sesuai dengan kebutuhan Anda.
+   ```bash
+   sudo mv admin_setup.sh /usr/local/bin/
+   ```
 
-## Catatan
+5. **Edit `.bashrc` untuk Menjalankan Skrip saat Login:**
 
-- Pastikan Anda mengganti placeholder seperti `/path/to/your/backup`, `nama_database_anda`, `user_database_anda`, dan `password_database_anda` dengan informasi yang sesuai.
-- Jika Anda mengalami masalah saat menggunakan skrip, pastikan semua prasyarat telah dipenuhi dan periksa log kesalahan untuk informasi lebih lanjut.
+   ```bash
+   sudo nano /root/.bashrc
+   ```
 
-Jika Anda memiliki pertanyaan atau masalah, silakan buka [isu](https://github.com/asepsupriatna90/lamp-server-scripts/issues) di GitHub untuk bantuan.
+   Tambahkan baris berikut di akhir file:
+
+   ```bash
+   # Menjalankan menu admin setelah login
+   /usr/local/bin/admin_setup.sh
+   ```
+
+6. **Simpan dan Muat Ulang `.bashrc`:**
+
+   ```bash
+   source /root/.bashrc
+   ```
+
+## Penggunaan
+
+Setelah melakukan langkah-langkah di atas, setiap kali Anda login ke VPS, menu interaktif akan muncul, memungkinkan Anda untuk memilih berbagai opsi untuk mengelola server.
+
+### Opsi Menu
+
+1. **Perbarui Sistem**: Memperbarui dan meng-upgrade sistem operasi.
+2. **Instal Apache**: Menginstal dan mengonfigurasi Apache.
+3. **Instal MySQL**: Menginstal dan mengamankan MySQL.
+4. **Instal PHP (7.4 & 8.1)**: Menginstal PHP 7.4 dan 8.1.
+5. **Instal phpMyAdmin**: Menginstal dan mengamankan phpMyAdmin.
+6. **Backup Data**: Membuat cadangan file website dan database.
+7. **Pulihkan Cadangan**: Memulihkan file website dan database dari cadangan.
+8. **Instal Domain**: Mengonfigurasi virtual host untuk domain baru.
+9. **Setup HTTPS**: Mengonfigurasi HTTPS menggunakan Certbot.
+10. **Ganti Domain**: Mengganti konfigurasi domain lama dengan yang baru.
+11. **Ganti Database, Username, dan Password**: Mengganti database, pengguna, dan password.
+12. **Keluar**: Keluar dari menu.
+
+## Kontribusi
+
+Jika Anda memiliki saran atau perbaikan untuk skrip ini, jangan ragu untuk mengajukan pull request atau membuka issue di repository.
+
+## Lisensi
+
+Skrip ini dilisensikan di bawah [MIT License](LICENSE).
 
 ```
